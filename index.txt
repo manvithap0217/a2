@@ -1,0 +1,235 @@
+Step 1: Set up your project
+Create a new project folder and navigate to it in the terminal.
+
+mkdir blog-website
+cd blog-website
+Initialize a new Node.js project.
+
+npm init -y
+Step 2: Install necessary packages
+Install the required npm packages:
+
+npm install express mongoose ejs
+Step 3: Project structure
+Create the following project structure:
+
+plaintext
+
+blog-website/
+|-- node_modules/
+|-- public/
+|   |-- styles/
+|       |-- style.css
+|-- views/
+|   |-- index.ejs
+|   |-- compose.ejs
+|   |-- post.ejs
+|-- app.js
+|-- package.json
+|-- .gitignore
+Step 4: Set up Express.js
+Create app.js and set up the basic Express.js server.
+
+javascript
+
+// app.js
+const express = require('express');
+const mongoose = require('mongoose');
+const ejs = require('ejs');
+
+const app = express();
+
+app.set('view engine', 'ejs');
+
+app.use(express.static('public'));
+
+mongoose.connect('mongodb://localhost:27017/blogDB', { useNewUrlParser: true, useUnifiedTopology: true });
+
+app.listen(3000, function () {
+  console.log('Server started on port 3000');
+});
+Step 5: Set up MongoDB
+Make sure you have MongoDB installed on your machine. Create a new database called blogDB for this example.
+
+Step 6: Create models
+Create a Post model for blog posts.
+
+javascript
+Copy code
+// models/post.js
+const mongoose = require('mongoose');
+
+const postSchema = new mongoose.Schema({
+  title: String,
+  content: String,
+});
+
+const Post = mongoose.model('Post', postSchema);
+
+module.exports = Post;
+Step 7: Create routes
+Set up routes for displaying the home page, composing new posts, and viewing individual posts.
+
+javascript
+
+// app.js
+const express = require('express');
+const mongoose = require('mongoose');
+const ejs = require('ejs');
+const bodyParser = require('body-parser');
+const Post = require('./models/post');
+
+const app = express();
+
+app.set('view engine', 'ejs');
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static('public'));
+
+mongoose.connect('mongodb://localhost:27017/blogDB', { useNewUrlParser: true, useUnifiedTopology: true });
+
+app.get('/', function (req, res) {
+  Post.find({}, function (err, posts) {
+    res.render('index', { posts: posts });
+  });
+});
+
+app.get('/compose', function (req, res) {
+  res.render('compose');
+});
+
+app.post('/compose', function (req, res) {
+  const post = new Post({
+    title: req.body.title,
+    content: req.body.content,
+  });
+
+  post.save(function (err) {
+    if (!err) {
+      res.redirect('/');
+    }
+  });
+});
+
+app.get('/posts/:postId', function (req, res) {
+  const requestedPostId = req.params.postId;
+
+  Post.findOne({ _id: requestedPostId }, function (err, post) {
+    res.render('post', {
+      title: post.title,
+      content: post.content,
+    });
+  });
+});
+
+app.listen(3000, function () {
+  console.log('Server started on port 3000');
+});
+Step 8: Create views
+Create the EJS templates for the home page, compose page, and individual post page.
+
+views/index.ejs
+html
+Copy code
+<!-- views/index.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/styles/style.css">
+  <title>Blog</title>
+</head>
+
+<body>
+  <h1>Blog</h1>
+  <a href="/compose">Compose</a>
+  <% posts.forEach(function(post) { %>
+    <div>
+      <h2><%= post.title %></h2>
+      <p><%= post.content %></p>
+      <a href="/posts/<%= post._id %>">Read more</a>
+    </div>
+  <% }); %>
+</body>
+
+</html>
+views/compose.ejs
+html
+Copy code
+<!-- views/compose.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/styles/style.css">
+  <title>Compose</title>
+</head>
+
+<body>
+  <h1>Compose</h1>
+  <form action="/compose" method="post">
+    <div>
+      <label for="title">Title</label>
+      <input type="text" id="title" name="title" required>
+    </div>
+    <div>
+      <label for="content">Content</label>
+      <textarea id="content" name="content" rows="4" required></textarea>
+    </div>
+    <button type="submit">Publish</button>
+  </form>
+</body>
+
+</html>
+views/post.ejs
+html
+Copy code
+<!-- views/post.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/styles/style.css">
+  <title><%= title %></title>
+</head>
+
+<body>
+  <h1><%= title %></h1>
+  <p><%= content %></p>
+  <a href="/">Back to Home</a>
+</body>
+
+</html>
+Step 9: Create styles
+Create a basic CSS file for styling.
+
+public/styles/style.css
+css
+Copy code
+/* public/styles/style.css */
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+
+h1 {
+  color: #333;
+}
+
+a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+Step 10: Run the application
+Run your application with the following command:
+node app.js
